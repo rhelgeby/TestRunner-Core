@@ -1,0 +1,256 @@
+Test Runner - Usage
+===================
+
+
+Installation
+------------
+
+Requirements:
+
+    * HTML5 compatible browser with JavaScript enabled.
+    * HTML5 Web Storage (used to store test progress between pages)
+
+Test Runner is installed by including its source in every page in the
+application (at minimum in every page that tests use). In addition the test
+case code must be included (test_main.js).
+
+Note: All test code must be loaded in all pages where tests are executed. If
+      some tests are excluded in some pages, the test progress state will be
+      corrupt.
+
+Example:
+
+    <script type="text/javascript" charset="utf-8" src="test_iterator.js"></script>
+    <script type="text/javascript" charset="utf-8" src="assert.js"></script>
+    <script type="text/javascript" charset="utf-8" src="test_runner.js"></script>
+    <script type="text/javascript" charset="utf-8" src="test_main.js"></script>
+
+
+Creating Tests
+--------------
+
+Tests are defined in a object hierarchy with TestCase, TestCollection and
+TestSuite objects.
+
+
+COLLECTIONS
+Test cases are stored in collections, so at least one test collection must be
+created first:
+
+    var mainCollection = new TestCollection("Main collection");
+    var secondCollection = new TestCollection("Second collection");
+
+
+TEST CASES
+Once a collection is created, test cases can be added to it.
+
+A test case is divided into phases. Each phase is a function, and if a test
+need to change the page, a second phase (function) is required to resume
+testing on the new page. Most test cases only need one phase.
+
+Since a test case is usually only added to one collection, it's easy to add it
+inline. Note that the last parameter of the TestCase constructor is an array:
+
+    mainCollection.addTest(new TestCase("demo", "index.html",
+    [
+        function()
+        {
+            // Test code here.
+            
+            var myButton = document.getElementById("myButton");
+            var status = document.getElementById("status");
+            assertInstanceOf(myButton, Button);
+            assertNotNull(status);
+            
+            myButton.click();
+            
+            assertHTMLEquals(status, "Button clicked.");
+        }
+    ]));
+
+With two phases:
+
+    mainCollection.addTest(new TestCase("two phases", "page1.html",
+    [
+        function()
+        {
+            // First phase (do stuff...)
+            
+            // Change page.
+            window.location.href = "page2.html";
+            
+            // Abort test runner so page can be changed. If not aborted here
+            // it will immediately continue at the next phase.
+            return false;
+        },
+        function()
+        {
+            // Second phase.
+            
+            // Continue testing in page2.html...
+        }
+    ]));
+
+
+TEST SUITE
+The test runner expects a test suite of collections with test cases. There may
+be created several test suites with various combinations of collections, but
+only one test suite can be passed to the test runner.
+
+    var testSuite = new TestSuite("All tests", [mainCollection, secondCollection]);
+
+It also accepts two function references for functions to be executed before and
+after every test:
+
+    function beforeTest()
+    {
+        console.log("Before test...");
+    }
+    
+    function afterTest()
+    {
+        console.log("After test...");
+    }
+    
+    var demoSuite = new TestSuite("Before/after demo", [mainCollection], beforeTest, afterTest);
+
+
+Running Tests
+-------------
+
+Construct a new TestRunner object with the test suite object as the first
+parameter, and a URL string to the result page as the second parameter.
+
+In combination with PhoneGap, it's suitable to initialize tests and test runner
+in the body onload event of each page.
+
+Once initialized, a call to runIfActive should make it start or resume
+automatically on every page where it's enabled.
+
+Note: PhoneGap may need some time to complete initialization. If the
+deviceReady event in PhoneGap isn't fired, a timer may be used as a fallback.
+How long to wait depends on the hardware. Keep the delay as low as possible
+(~100 ms) because it's added between each page load.
+
+    var testRunner = new TestRunner(testSuite, "test_results.html");
+    testRunner.runIfActive();
+
+In the result page it build results instead of running tests:
+
+    var testRunner = new TestRunner(testSuite, "test_results.html");
+    testRunner.buildResults();
+
+
+
+Test Runner - Technical Description
+===================================
+
+Goals
+-----
+
+* Automatic. No user interaction should be required (except for starting the
+  application and reviewing test results).
+
+* Based on web technologies (HTML5, JavaScript). Makes it platform independent.
+  Lives in the web browser.
+
+* Suitable for function tests in web GUIs as well as regular unit tests.
+
+* Embedded in application, with minimal impact on application code.
+
+* Compatible with PhoneGap. Designed for use with PhoneGap, but does not depend
+  on it.
+
+
+
+How Test Runner Works
+---------------------
+
+Test Runner is a tool for running automatic unit and function testing in web
+applications. It's written in JavaScript and embedded with the application.
+
+PHASES
+In contrast to regular test cases in other tools, Test Runner support multiple
+phases per test. Test phases are required when tests need to change the page,
+such as writing text in form fields, submitting and then verifying the result
+in another page. If any phase fail to complete, the test will fail.
+
+Each phase is a function reference located in an array in the test case object.
+Test Runner will iterate and execute these functions in the order they are
+referenced.
+
+Test runner can be aborted by returning false in any phase. Test progress will
+be saved so it can be resumed on a new page.
+
+
+SAVING STATE
+To keep each test isolated, the page is reloaded or changed between tests.
+Before loading a new page the test progress must be saved. It's serialized
+in JSON format and saved in a session variable by using the Web Storage feature
+of HTML5.
+
+Every time Test Runner is loaded, the state is restored if a test session is
+still active.
+
+Note: Include all tests in every page tests are executed. The test progress is
+      based on counters in iterators. If some tests are excluded in other pages
+      the counter may point to wrong tests (and possibly create a infinite
+      loop), or point to a invalid array index.
+
+
+INITIALIZING TEST RUNNER
+The developer has to build tests and construct a TestRunner object before
+starting tests.
+
+A TestSuite object is passed to the TestRunner constructor, along with a URL to
+the test result page template.
+
+
+STARTING TEST RUNNER
+When any page is loaded, the test runner should be initialized and started.
+PhoneGap applications may need a delayed start (~150+ ms, depending on
+hardware) to wait for PhoneGap to initialize first.
+
+Once the test runner is started it will check if there's an active test session
+and resume its state, or start a new one. Then it will loop through and
+execute all tests in the test suite.
+
+When all tests are executed it will load the result page. All test results are
+saved along with the test runner state. The result page initializes a test
+test runner in result mode. It results in a call to buildResults which makes
+test runner output formatted test results in a HTML-element named "results".
+
+
+
+Test Runner Objects
+-------------------
+
+ITERATOR
+The iterator object is used to iterate through collections and test cases.
+Its state is serializable so the test progress can be saved and restored.
+
+
+TEST CASE
+The TestCase object stores the array with test phase functions, a name and the
+URL of the page to load where the test is executed.
+
+
+TEST COLLECTION
+Stores a name and an array of TestCase objects. Collections are used to group
+related tests so it's possible to test a certain part of the application only.
+
+
+TEST SUITE
+A test suite is a collection of test collections. Test Runner iterate through
+collections and execute all tests. Several test suites may be created to
+execute only a certain set of collections.
+
+In addition it accepts function references for functions to be executed before
+and after each test.
+
+
+TEST RUNNER
+The main object. Manages state and execute tests.
+
+The only "public" methods are run, runIfActive and buildResults. All others are
+considered private and should not be called directly.
