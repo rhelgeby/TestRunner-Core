@@ -2,7 +2,7 @@ function buildTests()
 {
     var testCollection = new TestCollection("Main Collection");
 	
-	testCollection.addTest(new TestCase("example", "changeMe.html",
+	testCollection.addTest(new TestCase("example", "index.html",
 	[
 		function()
 		{
