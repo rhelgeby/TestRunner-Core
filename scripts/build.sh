@@ -3,9 +3,9 @@
 VERSION="1.0.0"
 FILE="testrunner-$VERSION.js"
 
-# Source and destination folders.
-SRC=src
-DEST=build
+# Source and destination folders, relative to the scripts folder.
+SRC=../src/js
+DEST=../build
 DEST_FILE=$DEST/$FILE
 
 mkdir -p $DEST
