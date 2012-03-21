@@ -486,9 +486,17 @@ TestRunner.prototype.runTest = function(testCase)
 	{
 		try
 		{
+		    // Get current phase.
+		    var phase = this.currentPhase;
+		    
+            // Prepare for next phase, increment and save. This state must be updated if the page is
+		    // instantly changed or refreshed.
+		    this.currentPhase++;
+		    this.saveState();
+		    
 			// Execute the test.
-			console.log("Running phase " + this.currentPhase);
-			var phaseResult = testCase.phases[this.currentPhase]();
+			console.log("Running phase " + phase);
+			var phaseResult = testCase.phases[phase]();
 			
 			if (phaseResult === false)
 			{
@@ -496,10 +504,6 @@ TestRunner.prototype.runTest = function(testCase)
 				// change, the test runner must stop so the next phase isn't executed before the
 				// new page is loaded.
 				abortScript = true;
-				
-				// Skip to next phase.
-				this.currentPhase++;
-				
 				break;
 			}
 			
@@ -526,9 +530,6 @@ TestRunner.prototype.runTest = function(testCase)
 			// Skip all other phases.
 			break;
 		}
-		
-		// Skip to next phase.
-		this.currentPhase++;
 	}
 	
 	if (abortScript)
