@@ -77,6 +77,10 @@ TestCase.prototype.validate = function()
 /**
  * Constructs a test collection.
  * 
+ * There are two ways to setup a test collection. The constructor accepts an array of TestCase
+ * objects, which can be declared inline in the constructor call. It's also possible to construct
+ * an empty collection and then add tests individually using the addTest method.
+ * 
  * @param name			Name of collection.
  * @param tests			(Optional) Array of TestCase objects.
  * 
@@ -114,6 +118,8 @@ TestCollection.prototype.validateTestCase = function(testCase)
 
 /**
  * Adds a test case to the collection. Throws an exception on error.
+ * 
+ * @param testCase		TestCase object to add.
  */
 TestCollection.prototype.addTest = function(testCase)
 {
@@ -127,8 +133,8 @@ TestCollection.prototype.addTest = function(testCase)
  * 
  * @param name			Name of test suite.
  * @param collections	Array of TestCollection objects.
- * @param before		(Optional) Function executed before every test.
- * @param after			(Optional) Function executed after every test.
+ * @param before		(Optional) Function to execute before every test.
+ * @param after			(Optional) Function to execute after every test.
  */
 function TestSuite(name, collections, before, after)
 {
@@ -159,8 +165,8 @@ TestSuite.prototype.validate = function()
  * 
  * This is the main object.
  * 
- * @param tests				Tests to run. TestSuite or TestCollection object.
- * @param resultPage		Page for rendering test results results.
+ * @param tests				Tests to run. TestSuite object.
+ * @param resultPage		Page URL to load when displaying test results.
  * 
  * @constructor
  */

@@ -1,0 +1,169 @@
+Test Runner API
+===============
+
+Object Summary (constructors)
+-----------------------------
+
+TestCase(name, initialPage, phases)
+    Constructs a test case.
+
+TestCollection(name, tests)
+    Constructs a collection of test cases.
+
+TestSuite(name, collections, before, after)
+    Constructs a test suite of test collections.
+
+TestRunner(testSuite, resultPage)
+    Main object. Constructs a test runner.
+
+TestResult(name, collection, suite, passed, msg)
+    Stores the result for a single test case.
+
+
+TestCase
+--------
+
+A test case is divided into phases with one phase for each page change. One
+phase may fill a form and submit, while the next phase will verify results on
+the new page. If the test doesn't change page, only one phase is required.
+
+The test is considered passed if no exceptions are thrown.
+
+If a test need to load a new page, the test runner can be aborted by returning
+false in any test phase. When aborted, the test progress will be saved so it can
+resume testing on the new page.
+
+TestCase(name, initialPage, phases)
+
+    Constructs a test case.
+
+    Parameters:
+    name            Test name.
+    initialPage     Initial page to load before the first phase is executed.
+    phases          Array with functions for each test phase. Phases are
+                    executed in the order they appear in the array.
+
+
+TestCollection
+--------------
+
+A test collection is a named collection of TestCase objects. Test cases are
+stored in a regular array.
+
+There are two ways to setup a test collection. The constructor accepts an array
+of TestCase objects, which can be declared inline in the constructor call. It's
+also possible to construct an empty collection and then add tests individually
+using the addTest method.
+
+TestCollection(name, tests)
+
+    Constructs a test collection.
+    
+    Parameters:
+    name            Name of collection.
+    tests           (Optional) Array of TestCase objects.
+    
+    Errors:
+    Validation error if an object in the tests array isn't an instance of
+    TestCase.
+
+TestCollection.addTest(testCase)
+
+    Adds a test case to the collection.
+
+    Parameters:
+    testCase        TestCase object to add.
+    
+    Errors:
+    Validation error if testCase isn't an instance of TestCase.
+
+
+TestSuite
+---------
+
+A test suite is a collection of collections with two optional references to
+functions to execute before and after every test case.
+
+TestSuite(name, collections, before, after)
+
+    Constructs a test suite.
+    
+    Parameters:
+    name            Name of test suite.
+    collections     Array of TestCollection objects.
+    before          (Optional) Function to execute before every test.
+    after           (Optional) Function to execute after every test.
+
+    Error:
+    Validation error if an object in the collections array isn't an instance of
+    TestCollection.
+
+
+TestRunner
+----------
+
+This is the main object that will execute tests and manage test sessions.
+
+TestRunner(testSuite, resultPage)
+
+    Constructs a test runner.
+    
+    Parameters:
+    tests           Tests to run. TestSuite object.
+    resultPage      Page URL to load when displaying test results.
+
+    Errors:
+    Invalid test suite or missing page URL.
+
+TestRunner.run()
+
+    Starts or resumes a test session.
+    
+    This method will iterate through tests, load their initial pages and execute
+    them. When all tests are executed, it will redirect to the result page.
+
+TestRunner.runIfActive()
+
+    Resumes an active test session, if it exist. Otherwies it does nothing.
+    
+TestRunner.buildResults()
+
+    Builds test results. This method should be called when the result page is
+    loaded. HTML is inserted in the element named "results", assuming it exist.
+
+
+Assert Functions
+----------------
+
+General parameters:
+actual          Actual value.
+expected        Expected value.
+constructor     Object constructor. Used to specify object types.
+msg             (Optional) Custom error message if failed.
+
+Logic assertions:
+assertTrue(actual, msg)
+assertFalse(actual, msg)
+assertSame(actual, expected, msg)
+assertNotSame(actual, expected, msg)
+assertNull(actual, msg)
+assertNotNull(actual, msg)
+assertUndefined(actual, msg)
+assertNotUndefined(actual, msg)
+
+Type assertions:
+assertNaN(actual, msg)
+assertNotNaN(actual, msg)
+assertInstanceOf(actual, constructor, msg)
+assertNotInstanceOf(actual, constructor, msg)
+assertTypeOf(actual, constructor, msg)
+assertBool(actual, msg)
+assertFunction(actual, msg)
+assertObject(actual, msg)
+assertNumber(actual, msg)
+assertString(actual, msg)
+assertArray(actual, msg)
+
+DOM element assertions:
+assertTagName(tagName, element, msg)
+assertElementId(element, id, msg)
