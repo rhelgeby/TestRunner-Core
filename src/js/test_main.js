@@ -1,12 +1,30 @@
 function buildTests()
 {
-    var testCollection = new TestCollection("Main Collection");
+	var testCollection = new TestCollection("Main Collection");
 	
 	testCollection.addTest(new TestCase("example", "index.html",
 	[
-		function()
+		function(testRunner)
 		{
 			// Test code here. The test will fail if any exception is thrown.
+		}
+	]));
+    
+	testCollection.addTest(new TestCase("callback", "index.html",
+	[
+		function(testRunner)
+		{
+			var c2 = testRunner.createErrorCallback("Error callback was called.");
+			
+			var c = testRunner.createCallback(function()
+			{
+				console.log("In callback.");
+			});
+			
+			console.log("Callback will be called in 2 sec...");
+			setTimeout(c2, 2000);
+			
+			return false;
 		}
 	]));
 	
@@ -49,7 +67,7 @@ function init(results)
 	// shorter delays may work fine too.
 	// Note: This delay is added between _each_ test. It could also be used to
 	//       slow down testing speed.
-	setTimeout("eventFallback()", 150);
+	setTimeout(eventFallback, 150);
 }
 
 function onDeviceReady()

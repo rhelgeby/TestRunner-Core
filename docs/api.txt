@@ -125,7 +125,29 @@ TestRunner.run()
 TestRunner.runIfActive()
 
     Resumes an active test session, if it exist. Otherwies it does nothing.
+
+TestRunner.createCallback(callback)
+
+    Creates a callback handler for the specified callback.
     
+    Parameters:
+    callback        Original callback. (Usually declared inline.)
+    
+    Returns:
+    Callback wrapper function. Refer to this wrapper instead of the original
+    callback.
+
+TestRunner.createErrorCallback(msg)
+
+    Creates a callback that will fail the current test if called.
+    
+    Parameters:
+    msg             Error message displayed in test results.
+    
+    Returns:
+    Callback wrapper. Refer to this wrapper function instead of the original
+    callback.
+
 TestRunner.buildResults()
 
     Builds test results. This method should be called when the result page is

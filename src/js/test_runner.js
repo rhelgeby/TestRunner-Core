@@ -3,10 +3,12 @@
 
 // Credits/Sources:
 // JUnit
+// JsTestDriver
 
+// TODO: Use a namespace to avoid potential conflicts.
 
 /**
- * Constructs a test result object.
+ * Constructs a test result value object.
  * 
  * @param name			Test name.
  * @param collection	Collection name.
@@ -50,6 +52,8 @@ function TestCase(name, initialPage, phases)
 	this.name = name;
 	this.page = initialPage;
 	this.phases = phases;
+	this.failed = false;
+	this.msg = "";
 	
 	this.validate();
 }
@@ -197,6 +201,9 @@ function TestRunner(testSuite, resultPage)
 	 * "single"		- run a single test
 	 */
 	this.mode = "all";
+	
+	// Timer that will fail a test if waiting too long for a callback. Created in runTest.
+	this.callbackFailTimer = null;
 	
 	// Initialize test state (creates more attributes).
 	this.resetState();
@@ -365,7 +372,8 @@ TestRunner.prototype.loadInitialPage = function(testCase)
  */
 TestRunner.prototype.run = function()
 {
-	// Initialize states if not active.
+	// Initialize states if a test session isn't started yet.
+	// (Note: stored and compared as string "true")
 	if (sessionStorage.testRunnerActive !== "true")
 	{
 		this.resetState();
@@ -386,6 +394,7 @@ TestRunner.prototype.run = function()
 			// No tests available, or all tests finished. Display results.
 			this.saveState();
 			this.showResults();
+			
 			return;
 		}
 		
@@ -399,6 +408,7 @@ TestRunner.prototype.run = function()
 		this.loadInitialPage(this.currentTest);
 		this.pageChanged = true;
 		this.saveState();
+		
 		return;
 	}
 	else
@@ -410,12 +420,13 @@ TestRunner.prototype.run = function()
 	// Run or resume test.
 	var result = this.runTest(this.currentTest);
 	
-	// Check if script should abort (a test needs to load a new page).
+	// Check if script should abort (a test needs to load a new page or wait for callbacks).
 	if (result === false)
 	{
 		// Save state and abort script to let the new page load.
 		this.pageChanged = true;
 		this.saveState();
+		
 		return;
 	}
 	
@@ -430,7 +441,7 @@ TestRunner.prototype.run = function()
 		this.numPassed++;
 	}
 	
-	// Get next test, check if done.
+	// Get next test, check if done testing.
 	if (!this.nextTest())
 	{
 		console.log("Testing done.");
@@ -441,12 +452,14 @@ TestRunner.prototype.run = function()
 		// Save state and display results in new page.
 		this.saveState();
 		this.showResults();
+		
 		return;
 	}
 	
 	// There are more tests. Save state so the next run will resume properly, then load the next
 	// test's initial page.
 	console.log ("Next test: " + this.currentTest.name);
+	this.pageChanged = true;
 	this.saveState();
 	this.loadInitialPage(this.currentTest);
 	
@@ -470,16 +483,14 @@ TestRunner.prototype.runIfActive = function()
  * 
  * @param testCase		Test to run (TestCase object).
  * 
- * @return				TestResult object, or false if test runner should be aborted (if the page
+ * @returns				TestResult object, or false if test runner should be aborted (if the page
  * 						is changed.
  */
 TestRunner.prototype.runTest = function(testCase)
 {
-	console.log("Running " + testCase.name + " from phase " + this.currentPhase);
+	console.log("Running test '" + testCase.name + "' from phase " + this.currentPhase);
 	
-	var passed = true;			// The test will fail if any phase fails.
 	var abortScript = false;
-	var msg = "";
 	
 	// Execute "before" if available and the test was just started.
 	if (typeof this.before === "function" && this.currentPhase == 0)
@@ -488,49 +499,50 @@ TestRunner.prototype.runTest = function(testCase)
 	}
 	
 	// Loop through phases, starting from current phase.
-	while (typeof testCase.phases[this.currentPhase] === "function")
+	while (!testCase.failed && typeof testCase.phases[this.currentPhase] === "function")
 	{
+		// Number of callbacks used in this phase. (Note: This var is declared/reset here.)
+		this.numCallbacks = 0;
+		
 		try
 		{
-		    // Get current phase.
-		    var phase = this.currentPhase;
-		    
-            // Prepare for next phase, increment and save. This state must be updated if the page is
-		    // instantly changed or refreshed.
+			// Prepare for next phase, increment and save. This state must be updated if the page is
+			// instantly changed or refreshed.
+			var phase = this.currentPhase;
 		    this.currentPhase++;
 		    this.saveState();
 		    
-			// Execute the test.
+			// Execute the test. Pass a reference to this test runner as a parameter.
 			console.log("Running phase " + phase);
-			var phaseResult = testCase.phases[phase]();
+			var phaseResult = testCase.phases[phase](this);
 			
+			// Check if stopping.
 			if (phaseResult === false)
 			{
-				// Current phase requires that this script is aborted. In case the page is about to
-				// change, the test runner must stop so the next phase isn't executed before the
-				// new page is loaded.
+				// Current phase requires that this script is stopped. There are two reasons for
+				// this: Loading a new page or waiting for a callback. If the script isn't stopped
+				// it will continue to next phase or test too early.
 				abortScript = true;
 				break;
 			}
-			
 		}
 		catch (err)
 		{
-			passed = false;
+			testCase.failed = true;
 			
 			// Assertion failed, get error message.
 			if (typeof err === "string")
 			{
-				msg = err;
+				testCase.msg = err;
 			}
 			else if (err instanceof Error)
 			{
 				// Usually a regular JavaScript exception object with a message.
-				msg = err.name + ': ' + err.message;
+				testCase.msg = err.name + ': ' + err.message;
 			}
 			else
 			{
-				msg = "No error message (unknown error object type).";
+				testCase.msg = "No error message (unknown error object type).";
 			}
 			
 			// Skip all other phases.
@@ -540,7 +552,28 @@ TestRunner.prototype.runTest = function(testCase)
 	
 	if (abortScript)
 	{
-		// Stop here if the page is changed.
+		// Check if waiting for callbacks.
+		if (this.numCallbacks > 0)
+		{
+			// Create callback fail-handler that will resume script if callback wasn't called.
+			var _testRunner = this;
+			var handler = function()
+			{
+				console.log("No callbacks called. Resuming testing.");
+				
+				// Fail test.
+				_testRunner.failTest(testCase, "No callbacks called.");
+				
+				// Resume test runner.
+				_testRunner.run();
+			}
+			
+			// TODO: variable for setting custom time.
+			console.log("Waiting for callback...");
+			this.callbackFailTimer = setTimeout(handler, 10000);
+		}
+		
+		// Stop script (to wait for callbacks or page change).
 		return false;
 	}
 	
@@ -554,7 +587,89 @@ TestRunner.prototype.runTest = function(testCase)
 		this.after();
 	}
 	
-	return new TestResult(testCase.name, this.currentCollection.name, this.suite.name, passed, msg);
+	return new TestResult(testCase.name, this.currentCollection.name, this.suite.name, !testCase.failed, testCase.msg);
+}
+
+/**
+ * Marks a test as failed.
+ * 
+ * @param msg		Error message.
+ */
+TestRunner.prototype.failTest = function(testCase, msg)
+{
+	testCase.failed = true;
+	testCase.msg = msg;
+}
+
+/**
+ * Creates a callback handler for the specified callback.
+ * 
+ * @param callback	Original callback. (Usually declared inline.)
+ * 
+ * @returns			Callback wrapper function. Refer to this wrapper instead of the original
+ * 					callback.
+ */
+TestRunner.prototype.createCallback = function(callback)
+{
+	this.numCallbacks++;
+	var _testRunner = this;
+	
+	// TODO: support for arguments in callback.
+	// TODO: support for multiple calls to the same callback.
+	
+	var handler = function()
+	{
+		_testRunner.numCallbacks--;
+		
+		// Stop fail-timer
+		clearTimeout(_testRunner.callbackFailTimer);
+		_testRunner.callbackFailTimer = null;
+		
+		// Call function
+		callback();
+		
+		// Resume testing (proceed to next phase or test.)
+		// TODO: How to avoid big call stack? This is only a problem if a lot of callbacks are
+		//		 called within the same test case.
+		_testRunner.run();
+	}
+	
+	return handler;
+}
+
+/**
+ * Creates a callback handler that will fail the test if called.
+ * 
+ * @param msg		Error message displayed in test resutls.
+ *
+ * @returns			Callback handler (function).
+ */
+TestRunner.prototype.createErrorCallback = function(msg)
+{
+	this.numCallbacks++;
+	var _testRunner = this;
+	var _msg = msg;
+	
+	// TODO: support for arguments in callback.
+	// TODO: support for multiple calls to the same callback.
+	
+	var handler = function()
+	{
+		_testRunner.numCallbacks--;
+		
+		// Stop fail-timer
+		clearTimeout(_testRunner.callbackFailTimer);
+		
+		// Fail test.
+		_testRunner.failTest(_testRunner.currentTest, _msg);
+		
+		// Resume testing (proceed to next phase or test.)
+		// TODO: How to avoid big call stack? This is only a problem if a test has a lot of
+		//		 callbacks.
+		_testRunner.run();
+	}
+	
+	return handler;
 }
 
 /**
