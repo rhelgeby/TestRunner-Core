@@ -130,6 +130,11 @@ TestRunner.createCallback(callback)
 
     Creates a callback handler for the specified callback.
     
+    Note: Don't call the wrapper function within a test case, instead call the
+          original callback directly. Calling it through the wrapper will result
+          in a infinite loop. This wrapper is only supposed to be called after
+          test runner is stopped.
+    
     Parameters:
     callback        Original callback. (Usually declared inline.)
     

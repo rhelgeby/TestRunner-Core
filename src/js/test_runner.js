@@ -4,6 +4,8 @@
 // Credits/Sources:
 // JUnit
 // JsTestDriver
+// http://odetocode.com/Articles/473.aspx
+// http://odetocode.com/blogs/scott/archive/2007/07/05/function-apply-and-function-call-in-javascript.aspx
 
 // TODO: Use a namespace to avoid potential conflicts.
 
@@ -614,7 +616,6 @@ TestRunner.prototype.createCallback = function(callback)
 	this.numCallbacks++;
 	var _testRunner = this;
 	
-	// TODO: support for arguments in callback.
 	// TODO: support for multiple calls to the same callback.
 	
 	var handler = function()
@@ -625,12 +626,13 @@ TestRunner.prototype.createCallback = function(callback)
 		clearTimeout(_testRunner.callbackFailTimer);
 		_testRunner.callbackFailTimer = null;
 		
-		// Call function
-		callback();
+		// Call function.
+		callback.apply(callback, arguments);
 		
 		// Resume testing (proceed to next phase or test.)
 		// TODO: How to avoid big call stack? This is only a problem if a lot of callbacks are
-		//		 called within the same test case.
+		//		 called within the same test case. Starting a new test will reload the page and
+		//		 clear the stack.
 		_testRunner.run();
 	}
 	
@@ -650,9 +652,6 @@ TestRunner.prototype.createErrorCallback = function(msg)
 	var _testRunner = this;
 	var _msg = msg;
 	
-	// TODO: support for arguments in callback.
-	// TODO: support for multiple calls to the same callback.
-	
 	var handler = function()
 	{
 		_testRunner.numCallbacks--;
@@ -664,8 +663,31 @@ TestRunner.prototype.createErrorCallback = function(msg)
 		_testRunner.failTest(_testRunner.currentTest, _msg);
 		
 		// Resume testing (proceed to next phase or test.)
-		// TODO: How to avoid big call stack? This is only a problem if a test has a lot of
-		//		 callbacks.
+		_testRunner.run();
+	}
+	
+	return handler;
+}
+
+/**
+ * Creates a callback handler that does nothing but resume testing when called. Useful when used as
+ * "success" callbacks where you need to wait for something to complete before continuing.
+ *
+ * @returns			Callback handler (function).
+ */
+TestRunner.prototype.createNoOpCallback = function()
+{
+	this.numCallbacks++;
+	var _testRunner = this;
+	
+	var handler = function()
+	{
+		_testRunner.numCallbacks--;
+		
+		// Stop fail-timer
+		clearTimeout(_testRunner.callbackFailTimer);
+		
+		// Resume testing (proceed to next phase or test.)
 		_testRunner.run();
 	}
 	
@@ -734,7 +756,7 @@ TestRunner.prototype.buildResults = function()
 		{
 			// Start new table.
 			html += "<table class='resultTable'><caption>" + result.collection + "</caption>";
-			html += "<tr><th class='test'>Test</th><th class='message'>Message</th>";
+			html += "<tr><th class='test'>Test</th><th class='message'>Errors</th>";
 			startTable = false;
 		}
 		
