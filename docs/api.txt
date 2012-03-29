@@ -153,6 +153,19 @@ TestRunner.createErrorCallback(msg)
     Callback wrapper. Refer to this wrapper function instead of the original
     callback.
 
+TestRunner.createNoOpCallback()
+
+    Creates a callback that does nothing but resume testing when called. Useful
+    when used as "success" callbacks where you need to wait for something to
+    complete before continuing.
+    
+    Parameters:
+    msg             Error message displayed in test results.
+    
+    Returns:
+    Callback wrapper. Refer to this wrapper function instead of the original
+    callback.
+
 TestRunner.buildResults()
 
     Builds test results. This method should be called when the result page is

@@ -221,6 +221,23 @@ test runner in result mode. It results in a call to buildResults which makes
 test runner output formatted test results in a HTML-element named "results".
 
 
+HANDLING CALLBACKS IN TESTS
+It's common that frameworks use event callbacks to tell whether an operation
+was successful or failed. Phases in test cases are considered passed if they
+return without errors.
+
+Tests that need to use callbacks must do two things:
+
+    * Return false and wait for callbacks. This will stop Test Runner from
+      continuing to the next phase or test too early.
+    * Use wrappers for callbacks. These wrappers will notify Test Runner
+      when callbacks are executed, so it can resume Test Runner again.
+
+When a test phase function returns, Test Runner will check if any callback
+wrappers were used and start a fail-timer. The timer is used to resume testing
+if no callback was executed. If this timer is triggered, the test will fail. If
+a callback is executed, the timer will be aborted.
+
 
 Test Runner Objects
 -------------------
