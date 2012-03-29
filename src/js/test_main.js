@@ -18,6 +18,7 @@ function buildTests()
 			callbackTest = testRunner.createCallback(function(msg)
 			{
 				console.log("Message in callback: " + msg);
+				throw "Error...";
 			});
 			
 			var noop = testRunner.createNoOpCallback();

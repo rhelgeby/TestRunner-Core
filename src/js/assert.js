@@ -1,5 +1,5 @@
 //asserts.js
-//Tor Magnus Rakvåg
+//Tor Magnus Rakvï¿½g
 
 //Based (sort of) on jstestrunner Asserts.js
 
@@ -167,3 +167,8 @@ function assertArray(actual, msg) {
 	}	
 }
 
+function assertArrayNotEmpty(actual, msg) {
+	if (actual.length == 0) {
+		fail(typeof msg === 'undefined' ? 'array empty' : msg);
+	}
+}

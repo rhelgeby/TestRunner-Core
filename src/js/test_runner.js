@@ -365,8 +365,19 @@ TestRunner.prototype.loadInitialPage = function(testCase)
 	
 	console.log("Loading initial page for test case " + testCase.name + ": " + testCase.page);
 	
-	window.location.href = testCase.page;
+	var url = testCase.page;
 	this.pageChanged = true;
+	
+	/*if (navigator.userAgent.toLowerCase().match(/android/))
+	{
+		// Bug in Android Phone Gap: deviceready won't fire when using location.href. Using
+		// navigator.app.loadUrl in PhoneGap to load a new page properly. It's delayed in a timer
+		// to let the script finish properly before loading a new page.
+		setTimeout(function(){navigator.app.loadUrl(url)}, 1);
+		return;
+	}*/
+	
+	window.location.href = url;
 }
 
 /**
@@ -530,22 +541,7 @@ TestRunner.prototype.runTest = function(testCase)
 		}
 		catch (err)
 		{
-			testCase.failed = true;
-			
-			// Assertion failed, get error message.
-			if (typeof err === "string")
-			{
-				testCase.msg = err;
-			}
-			else if (err instanceof Error)
-			{
-				// Usually a regular JavaScript exception object with a message.
-				testCase.msg = err.name + ': ' + err.message;
-			}
-			else
-			{
-				testCase.msg = "No error message (unknown error object type).";
-			}
+			this.handleError(testCase, err);
 			
 			// Skip all other phases.
 			break;
@@ -593,6 +589,32 @@ TestRunner.prototype.runTest = function(testCase)
 }
 
 /**
+ * Handles errors (exceptions) thrown from a test case. The test will be marked as failed.
+ *
+ * @param testCase		Test case the error applies to.
+ * @param err			Error message (Error object or a string).
+ */
+TestRunner.prototype.handleError = function(testCase, err)
+{
+	testCase.failed = true;
+	
+	// Assertion failed, get error message.
+	if (typeof err === "string")
+	{
+		testCase.msg = err;
+	}
+	else if (err instanceof Error)
+	{
+		// Usually a regular JavaScript exception object with a message.
+		testCase.msg = err.name + ': ' + err.message;
+	}
+	else
+	{
+		testCase.msg = "No error message (unknown error object type).";
+	}
+}
+
+/**
  * Marks a test as failed.
  * 
  * @param msg		Error message.
@@ -627,7 +649,15 @@ TestRunner.prototype.createCallback = function(callback)
 		_testRunner.callbackFailTimer = null;
 		
 		// Call function.
-		callback.apply(callback, arguments);
+		try
+		{
+			callback.apply(callback, arguments);
+		}
+		catch (err)
+		{
+			// Handles assertions and other exceptions.
+			_testRunner.handleError(_testRunner.currentTest, err);
+		}
 		
 		// Resume testing (proceed to next phase or test.)
 		// TODO: How to avoid big call stack? This is only a problem if a lot of callbacks are
