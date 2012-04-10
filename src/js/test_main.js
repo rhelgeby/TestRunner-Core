@@ -18,7 +18,6 @@ function buildTests()
 			callbackTest = testRunner.createCallback(function(msg)
 			{
 				console.log("Message in callback: " + msg);
-				throw "Error...";
 			});
 			
 			var noop = testRunner.createNoOpCallback();
@@ -57,16 +56,20 @@ function afterTest()
 }
 
 
-// ---- Init ----
+//---- Init ----
 
-// Hook deviceready event in PhoneGap. Native features in PhoneGap cannot be
-// used before this event is fired.
-document.addEventListener("deviceready", onDeviceReady, true);
 var deviceReadyFired = false;
 
 // Whether we're displaying the results this time.
 var displayResults = false;
 
+/**
+ * Initialize tests and Test Runner.
+ * 
+ * @param results	Whether results should be displayed (boolean). This
+ * 					parameter is only used by the result page. Regular
+ * 					pages don't need to pass this parameter.
+ */
 function init(results)
 {
 	displayResults = results;
@@ -74,21 +77,37 @@ function init(results)
 	buildTests();
 	prepareRunner();
 	
-	// If the deviceready event isn't fired after a certain time, force init.
-	// We don't know why it isn't always fired, but PhoneGap works after a
-	// certain time. You may experiment with this value. 150ms is safe, but
-	// shorter delays may work fine too.
-	// Note: This delay is added between _each_ test. It could also be used to
-	//       slow down testing speed.
-	setTimeout(eventFallback, 150);
+	// Not using PhoneGap now, start immediately.
+	run();
+	
+	// Use this code if using PhoneGap.
+	/*if (isPhoneGapReady())
+	{
+		run();
+	}
+	else
+	{
+		// Wait for PhoneGap to load.
+		document.addEventListener("deviceready", onDeviceReady, false);
+		
+		// If the deviceready event isn't fired after a certain time, force init.
+		setTimeout("eventFallback()", 500);
+	}*/
+}
+
+function isPhoneGapReady()
+{
+	// Sometimes the deviceready event is fired too fast, before the script adds the event
+	// listener. By checking existence of window.device we know if it's already fired.
+	return typeof window.device !== "undefined";
 }
 
 function onDeviceReady()
 {
+	console.log("Event: deviceready");
 	if (!deviceReadyFired)
 	{
 		deviceReadyFired = true;
-		console.log("DeviceReady fired...");
 		run();
 	}
 }
@@ -97,6 +116,11 @@ function eventFallback()
 {
 	if (!deviceReadyFired)
 	{
+		console.log("Timed out while waiting for deviceready event. Resuming...");
+		
+		// Mark as fired to prevent double call to run method if event is delayed.
+		deviceReadyFired = true;
+		
 		run();
 	}
 }
@@ -110,15 +134,16 @@ function run()
 	}
 	else
 	{
+		// Use run to always start testing when the page is loaded.
+		// Use runIfActive to only start if a test session is already running.
+		
 		testRunner.run();			    // Automatic.
-		//testRunner.runIfActive();	    // Manual start.
+		//testRunner.runIfActive();	    // Manual start (with start button).
 	}
 }
 
 function prepareRunner()
 {
-	var suite = testSuite;
-	
-	testRunner = new TestRunner(suite, "test_results.html");
+	testRunner = new TestRunner(testSuite, "test_results.html");
 	console.log("TestRunner ready on page " + window.location.href);
 }

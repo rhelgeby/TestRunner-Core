@@ -348,6 +348,28 @@ TestRunner.prototype.nextTest = function()
 	return this.currentTest;
 }
 
+TestRunner.prototype.loadPage = function(url)
+{
+	// Check if using PhoneGap. Loading a page must be done through PhoneGap's API, or it won't
+	// load properly on the new page.
+	if (typeof window.device !== "undefined")
+	{
+		console.log("Using PhoneGap to change page...");
+		
+		// Bug in Android Phone Gap: deviceready won't fire when using location.href. Using
+		// navigator.app.loadUrl in PhoneGap to load a new page properly.
+		
+		// TODO: Get the path.
+		var path = "file:///android_asset/www/";
+		
+		// Use a timer to let the script finish properly before loading a new page.
+		setTimeout(function(){navigator.app.loadUrl(path + url)}, 1);
+		return;
+	}
+	
+	window.location.href = url;
+}
+
 /**
  * Loads the initial page of a test case.
  * 
@@ -363,21 +385,10 @@ TestRunner.prototype.loadInitialPage = function(testCase)
 		throw "Invalid test case.";
 	}
 	
-	console.log("Loading initial page for test case " + testCase.name + ": " + testCase.page);
+	console.log("Loading initial page for test case '" + testCase.name + "': " + testCase.page);
 	
-	var url = testCase.page;
 	this.pageChanged = true;
-	
-	/*if (navigator.userAgent.toLowerCase().match(/android/))
-	{
-		// Bug in Android Phone Gap: deviceready won't fire when using location.href. Using
-		// navigator.app.loadUrl in PhoneGap to load a new page properly. It's delayed in a timer
-		// to let the script finish properly before loading a new page.
-		setTimeout(function(){navigator.app.loadUrl(url)}, 1);
-		return;
-	}*/
-	
-	window.location.href = url;
+	this.loadPage(testCase.page);
 }
 
 /**
@@ -736,7 +747,10 @@ TestRunner.prototype.showResults = function()
  * Builds test results in the element named "results".
  */
 TestRunner.prototype.buildResults = function()
-{	
+{
+	// TODO: This method doesn't need to be a part of TestRunner. All results are stored in the
+	//		 session storage. Statistics can be calculated when iterating the results.
+	
 	var element = document.getElementById("results");
 	var collection = null;
 	var startTable = true;

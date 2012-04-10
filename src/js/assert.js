@@ -1,7 +1,8 @@
-//asserts.js
-//Tor Magnus Rakv�g
+// Test Runner Assertion Functions
+// Tor Magnus Rakvåg
 
-//Based (sort of) on jstestrunner Asserts.js
+// Credits/Sources:
+// JsTestDriver
 
 var fail = function AssertionException(msg) {
 	var err = new Error(msg);

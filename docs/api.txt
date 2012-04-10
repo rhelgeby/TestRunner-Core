@@ -126,6 +126,14 @@ TestRunner.runIfActive()
 
     Resumes an active test session, if it exist. Otherwies it does nothing.
 
+TestRunner.loadPage(url)
+
+    Loads a page. If PhoneGap is loaded, it will use the PhoneGap API to
+    properly let it load a new page.
+    
+    Parameters:
+    url             Page URL to load (relative to www-folder).
+
 TestRunner.createCallback(callback)
 
     Creates a callback handler for the specified callback.
@@ -178,7 +186,7 @@ Assert Functions
 General parameters:
 actual          Actual value.
 expected        Expected value.
-constructor     Object constructor. Used to specify object types.
+constructor     Object constructor function. Used to specify object types.
 msg             (Optional) Custom error message if failed.
 
 Logic assertions:
