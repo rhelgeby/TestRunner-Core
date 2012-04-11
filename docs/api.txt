@@ -192,6 +192,8 @@ msg             (Optional) Custom error message if failed.
 Logic assertions:
 assertTrue(actual, msg)
 assertFalse(actual, msg)
+assertEquals(actual, expected, msg)
+assertNotEquals(actual, expected, msg)
 assertSame(actual, expected, msg)
 assertNotSame(actual, expected, msg)
 assertNull(actual, msg)

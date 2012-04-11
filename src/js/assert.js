@@ -68,6 +68,18 @@ function assertFalse(actual, msg) {
 	}
 }
 
+function assertEquals(actual, expected, msg) {
+	if (actual != expected) {
+		fail(typeof msg === 'undefined' ? 'Expected ' + expected + ' but was ' + actual : msg);
+	}
+}
+
+function assertNotEquals(actual, expected, msg) {
+	if (actual == expected) {
+		fail(typeof msg === 'undefined' ? 'Expected ' + expected + ' but was ' + actual : msg);
+	}
+}
+
 function assertSame(actual, expected, msg) {
 	if (actual !== expected) {
 		fail(typeof msg === 'undefined' ? 'Expected ' + expected + ' but was ' + actual : msg);

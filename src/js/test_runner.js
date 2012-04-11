@@ -352,7 +352,7 @@ TestRunner.prototype.loadPage = function(url)
 {
 	// Check if using PhoneGap. Loading a page must be done through PhoneGap's API, or it won't
 	// load properly on the new page.
-	if (typeof window.device !== "undefined")
+	if (typeof cordova !== "undefined")
 	{
 		console.log("Using PhoneGap to change page...");
 		
@@ -740,7 +740,7 @@ TestRunner.prototype.createNoOpCallback = function()
  */
 TestRunner.prototype.showResults = function()
 {
-	window.location.href = this.resultPage;
+	this.loadPage(this.resultPage);
 }
 
 /**
