@@ -363,7 +363,20 @@ TestRunner.prototype.loadPage = function(url)
 		var path = "file:///android_asset/www/";
 		
 		// Use a timer to let the script finish properly before loading a new page.
-		setTimeout(function(){navigator.app.loadUrl(path + url)}, 1);
+		var _url = url;
+		setTimeout(function()
+		{
+			try
+			{
+				navigator.app.loadUrl(path + url);
+			}
+			catch (err)
+			{
+				console.log("Failed to use PhoneGap to change page, using default method. Error: " + err.message);
+				window.location.href = _url;
+			}
+		}, 1);
+		
 		return;
 	}
 	
