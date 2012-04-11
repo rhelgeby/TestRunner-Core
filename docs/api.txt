@@ -42,6 +42,10 @@ TestCase(name, initialPage, phases)
     initialPage     Initial page to load before the first phase is executed.
     phases          Array with functions for each test phase. Phases are
                     executed in the order they appear in the array.
+                    
+                    Each phase has an optional parameter with the reference
+                    to the test runner instance. This is useful when using
+                    callbacks or chaning pages.
 
 
 TestCollection
