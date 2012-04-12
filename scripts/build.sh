@@ -14,6 +14,7 @@ mkdir -p $DEST/js
 cat $SRC/js/assert.js > $DEST_FILE
 cat $SRC/js/test_iterator.js >> $DEST_FILE
 cat $SRC/js/test_runner.js >> $DEST_FILE
+cat $SRC/js/test_init.js >> $DEST_FILE
 
 cp $SRC/js/test_main.js $DEST/js/
 cp $SRC/test_results.html $DEST

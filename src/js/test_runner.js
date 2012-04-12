@@ -173,10 +173,13 @@ TestSuite.prototype.validate = function()
  * 
  * @param tests				Tests to run. TestSuite object.
  * @param resultPage		Page URL to load when displaying test results.
+ * @param callbackTimeout	Optional. Time to wait for callback before failing
+ * 							the test. Default is 10 seconds (10000). This does
+ * 							not apply to tests that don't use callbacks.
  * 
  * @constructor
  */
-function TestRunner(testSuite, resultPage)
+function TestRunner(testSuite, resultPage, callbackTimeout)
 {
 	// Validate test suite.
 	if (!(testSuite instanceof TestSuite))
@@ -185,27 +188,43 @@ function TestRunner(testSuite, resultPage)
 	}
 	this.suite = testSuite;
 	
-	
+	// Validate result page (simple validation).
 	if (!(typeof resultPage === "string"))
 	{
 		throw "Invalid result page. Must be a string (page URL).";
 	}
-	
 	this.resultPage = resultPage;
 	
+	// Timer that will fail a test if waiting too long for a callback. Created
+	// in runTest.
+	this.callbackFailTimer = null;
+	
+	// Validate callback timeout.
+	this.callbackTimeout = 10000;
+	if (!(typeof callbackTimeout === "undefined"))
+	{
+		if (typeof callbackTimeout == "number")
+		{
+			this.callbackTimeout = callbackTimeout;
+		}
+		else
+		{
+			throw "Invalid callbackTimeout. Must be a number.";
+		}
+	}
+	
+	// Get functions to execute before and after tests. These are optional and
+	// may be undefined.
 	this.before = this.suite.before;
 	this.after = this.suite.after;
 	
-	/**
-	 * Current runner mode. Options
-	 * "all"		- run all tests in all collections
-	 * "collection"	- run all tests in the current collection
-	 * "single"		- run a single test
-	 */
+	//TODO: This is a partial implementation of running single tests or
+	// 		collections. Works, but no interface to control this is implemented.
+	// Current runner mode. Options:
+	// "all"		- run all tests in all collections
+	// "collection"	- run all tests in the current collection
+	// "single"		- run a single test
 	this.mode = "all";
-	
-	// Timer that will fail a test if waiting too long for a callback. Created in runTest.
-	this.callbackFailTimer = null;
 	
 	// Initialize test state (creates more attributes).
 	this.resetState();
@@ -591,8 +610,8 @@ TestRunner.prototype.runTest = function(testCase)
 			}
 			
 			// TODO: variable for setting custom time.
-			console.log("Waiting for callback...");
-			this.callbackFailTimer = setTimeout(handler, 10000);
+			console.log("Waiting for callback (max delay: " + this.callbackTimeout + " ms)...");
+			this.callbackFailTimer = setTimeout(handler, this.callbackTimeout);
 		}
 		
 		// Stop script (to wait for callbacks or page change).

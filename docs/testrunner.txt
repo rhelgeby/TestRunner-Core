@@ -100,7 +100,7 @@ With two phases:
 TEST SUITE
 The test runner expects a test suite of collections with test cases. There may
 be created several test suites with various combinations of collections, but
-only one test suite can be passed to the test runner.
+only one test suite can be used.
 
     var testSuite = new TestSuite("All tests", [mainCollection, secondCollection]);
 
@@ -123,28 +123,17 @@ after every test:
 Running Tests
 -------------
 
-Construct a new TestRunner object with the test suite object as the first
-parameter, and a URL string to the result page as the second parameter.
+Create a function that will construct a TestRunnerStarter object and pass it the
+test suite along with its other required parameters. See details about the
+TestRunnerStarter constructor in the API documentation. TheTestRunnerStarter can
+be configured to start automatically once it's constructed.
 
-In combination with PhoneGap, it's suitable to initialize tests and test runner
-in the body onload event of each page.
+Example code is located in test_main.js.
 
-Once initialized, a call to runIfActive should make it start or resume
-automatically on every page where it's enabled.
+In most cases, it's best to initialize testing in the onload event of each page:
 
-Note: PhoneGap may need some time to complete initialization. If the
-deviceReady event in PhoneGap isn't fired, a timer may be used as a fallback.
-How long to wait depends on the hardware. Keep the delay as low as possible
-(~100 ms) because it's added between each page load.
-
-    var testRunner = new TestRunner(testSuite, "test_results.html");
-    testRunner.runIfActive();
-
-In the result page it build results instead of running tests:
-
-    var testRunner = new TestRunner(testSuite, "test_results.html");
-    testRunner.buildResults();
-
+    <body onload="initTesting()">
+    ...
 
 
 Test Runner - Technical Description
@@ -178,43 +167,37 @@ PHASES
 In contrast to regular test cases in other tools, Test Runner support multiple
 phases per test. Test phases are required when tests need to change the page,
 such as writing text in form fields, submitting and then verifying the result
-in another page. If any phase fail to complete, the test will fail.
+in another page. If any phase fail to complete (by throwing errors), the test
+will fail.
 
-Each phase is a function reference located in an array in the test case object.
+Each phase is a function reference located in an array in the TestCase object.
 Test Runner will iterate and execute these functions in the order they are
-referenced.
+added.
 
-Test runner can be aborted by returning false in any phase. Test progress will
-be saved so it can be resumed on a new page.
+Testing can be aborted by returning false in any phase. Test progress will be
+saved in session storage so it can be resumed on a new page or at a later time.
 
 
 SAVING STATE
-To keep each test isolated, the page is reloaded or changed between tests.
-Before loading a new page the test progress must be saved. It's serialized
-in JSON format and saved in a session variable by using the Web Storage feature
-of HTML5.
+To keep each test isolated, the page is reloaded between tests. Before loading a
+new page the test progress must be saved. It's serialized in JSON format and
+saved in a session variable by using the Web Storage feature of HTML5.
 
 Every time Test Runner is loaded, the state is restored if a test session is
 still active.
 
-Note: Include all tests in every page tests are executed. The test progress is
-      based on counters in iterators. If some tests are excluded in other pages
-      the counter may point to wrong tests (and possibly create a infinite
-      loop), or point to a invalid array index.
+The test code itself is not saved, so it's important that the exact same code
+is loaded when testing is resumed. If some tests are excluded in other pages
+the counter may point to wrong tests (and possibly create a infinite loop), or
+point to a invalid array index.
 
 
-INITIALIZING TEST RUNNER
-The developer has to build tests and construct a TestRunner object before
-starting tests.
-
-A TestSuite object is passed to the TestRunner constructor, along with a URL to
-the test result page template.
-
-
-STARTING TEST RUNNER
-When any page is loaded, the test runner should be initialized and started.
-PhoneGap applications may need a delayed start (~150+ ms, depending on
-hardware) to wait for PhoneGap to initialize first.
+INITIALIZING AND STARTING TEST RUNNER
+The developer has to create a test suite that will be passed to a
+TestRunnerStarter. When the page is loaded (or at any time that suits the
+developer) the TestRunnerStarter object is used to prepare a test runner and
+start it. PhoneGap applications may need a delayed start to wait for PhoneGap to
+initialize first. TestRunnerStarter will handle this delay if PhoneGap is used.
 
 Once the test runner is started it will check if there's an active test session
 and resume its state, or start a new one. Then it will loop through and
@@ -222,21 +205,20 @@ execute all tests in the test suite.
 
 When all tests are executed it will load the result page. All test results are
 saved along with the test runner state. The result page initializes a test
-test runner in result mode. It results in a call to buildResults which makes
-test runner output formatted test results in a HTML-element named "results".
+test runner in result mode that make a call to buildResults. This method will
+output formatted test results in a HTML-element named "results".
 
 
 HANDLING CALLBACKS IN TESTS
-It's common that frameworks use event callbacks to tell whether an operation
-was successful or failed. Phases in test cases are considered passed if they
-return without errors.
+Some frameworks may use event callbacks to tell whether an operation was
+successful or failed.
 
 Tests that need to use callbacks must do two things:
 
-    * Return false and wait for callbacks. This will stop Test Runner from
-      continuing to the next phase or test too early.
     * Use wrappers for callbacks. These wrappers will notify Test Runner
       when callbacks are executed, so it can resume Test Runner again.
+    * Return false and wait for callbacks. This will stop Test Runner from
+      continuing to the next phase or test too early.
 
 When a test phase function returns, Test Runner will check if any callback
 wrappers were used and start a fail-timer. The timer is used to resume testing

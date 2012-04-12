@@ -14,6 +14,7 @@ if not exist "%DEST\js" (
 type %SRC%\js\assert.js > %DEST_FILE%
 type %SRC%\js\test_iterator.js >> %DEST_FILE%
 type %SRC%\js\test_runner.js >> %DEST_FILE%
+type %SRC%\js\test_init.js >> %DEST_FILE%
 
 copy %SRC%\js\test_main.js %DEST%\js
 copy %SRC%\test_results.html %DEST%

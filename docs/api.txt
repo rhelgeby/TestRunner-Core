@@ -13,7 +13,7 @@ TestCollection(name, tests)
 TestSuite(name, collections, before, after)
     Constructs a test suite of test collections.
 
-TestRunner(testSuite, resultPage)
+TestRunner(testSuite, resultPage, callbackTimeout)
     Main object. Constructs a test runner.
 
 TestResult(name, collection, suite, passed, msg)
@@ -29,9 +29,9 @@ the new page. If the test doesn't change page, only one phase is required.
 
 The test is considered passed if no exceptions are thrown.
 
-If a test need to load a new page, the test runner can be aborted by returning
-false in any test phase. When aborted, the test progress will be saved so it can
-resume testing on the new page.
+If a test need to load a new page or use callbacks, the test runner can be
+aborted by returning false in any test phase. When aborted, the test progress
+will be saved so it can resume testing later, or on the new page.
 
 TestCase(name, initialPage, phases)
 
@@ -115,6 +115,9 @@ TestRunner(testSuite, resultPage)
     Parameters:
     tests           Tests to run. TestSuite object.
     resultPage      Page URL to load when displaying test results.
+    callbackTimeout Optional. Time to wait for callback (ms) before failing the
+                    test. Default is 10 seconds (10000). This does not apply to
+                    tests that don't use callbacks.
 
     Errors:
     Invalid test suite or missing page URL.
@@ -182,6 +185,34 @@ TestRunner.buildResults()
 
     Builds test results. This method should be called when the result page is
     loaded. HTML is inserted in the element named "results", assuming it exist.
+
+
+TestRunnerStarter
+-----------------
+
+Helper object to initialize the test runner and start testing.
+
+TestRunnerStarter(testSuite, alwaysStart, showResults, eventFallbackDelay, callbackTimeout)
+
+    Constructs a TestRunner starter.
+    
+    Parameters:
+    testSuite           Test suite to use (TestSuite object).
+    alwaysStart         Whether testing should always start (true), or just if
+                        a test session is active (false). If not always starting
+                        a call to TestRunnerStarter.run must be done manually.
+    showResults         Whether results should be displayed (boolean). This
+                        parameter should only be true when used by the result
+                        page.
+    eventFallbackDelay  Optional. Delay before forcing init when waiting for the
+                        "deviceready" event to be triggered by PhoneGap.
+    callbackTimout      Optional. Time to wait for callback before failing the
+                        test. Default is 10 seconds (10000). This does not apply
+                        to tests that don't use callbacks.
+
+TestRunnerStarter.run()
+
+    Function to call when manually start testing.
 
 
 Assert Functions

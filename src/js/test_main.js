@@ -1,15 +1,62 @@
+/**
+ * This function should be called when the page is loaded (onload event). 
+ */
+function initTesting()
+{
+	new TestRunnerStarter(
+			buildTests(),	// testSuite
+			true,			// alwaysStart
+			false,			// showResults
+			150);			// eventFallbackDelay
+			//10000);		// callbackTimeout (optional, defaults to 10 seconds.)
+}
+
+/**
+ * This function is only used by the test result page.
+ */
+function initTestResults()
+{
+	// TODO: Make this part independent of Test Runner so it doesn't have to
+	//		 build tests that are never used.
+	
+	new TestRunnerStarter(
+			buildTests(),	// testSuite
+			false,			// alwaysStart
+			true,			// showResults
+			150);			// eventFallbackDelay
+			//10000);		// callbackTimeout (optional, defaults to 10 seconds.)
+}
+
+/**
+ * Called when tests should be built.
+ * 
+ * @returns		Test suite to use.
+ */
 function buildTests()
 {
+	// You may use multiple scripts to organize test code. Make a function in
+	// them that will return a test suite or collections.
+	
+	// All test cases must be stored in a collection.
 	var testCollection = new TestCollection("Main Collection");
 	
-	testCollection.addTest(new TestCase("example", "index.html",
+	// Add a test case to a collection like this. Check the documentation about
+	// the TestCase object for details.
+	testCollection.addTest(new TestCase("Example test", "index.html",
 	[
 		function(testRunner)
 		{
 			// Test code here. The test will fail if any exception is thrown.
-		}
+		}/*,
+		function()
+		{
+			// Second phase. This is optional. There's no limit on number of
+			// test phases. Check the technical documentation about phases and 
+			// callbacks.
+		}*/
 	]));
     
+	// Example of asynchronous testing with a timer that waits for two seconds.
 	testCollection.addTest(new TestCase("callback example", "index.html",
 	[
 		function(testRunner)
@@ -24,12 +71,13 @@ function buildTests()
 			
 			console.log("Callback will be called in 2 sec...");
 			
-			// Call the callback in two seconds. Note the use of quotes. This code will be executed
-			// in another scope, which is why callbackTest wasn't declared with "var".
+			// Call the callback in two seconds. Note the use of quotes. This
+			// code will be executed in another scope, which is why
+			// callbackTest wasn't declared with "var".
 			setTimeout("callbackTest('test');", 2000);
 			
-			// If not passing any parameters in the callback, it's also possible to use the
-			// function directly.
+			// If not passing any parameters in the callback, it's also
+			// possible to use the function directly.
 			//setTimeout(exampleCallback, 2000);
 			
 			return false;
@@ -40,7 +88,7 @@ function buildTests()
 		}
 	]));
 	
-	testSuite = new TestSuite("All tests", [testCollection], beforeTest, afterTest);
+	return new TestSuite("All tests", [testCollection], beforeTest, afterTest);
 }
 
 // Called before every test.
@@ -53,97 +101,4 @@ function beforeTest()
 function afterTest()
 {
 	console.log("'after' executed");
-}
-
-
-//---- Init ----
-
-var deviceReadyFired = false;
-
-// Whether we're displaying the results this time.
-var displayResults = false;
-
-/**
- * Initialize tests and Test Runner.
- * 
- * @param results	Whether results should be displayed (boolean). This
- * 					parameter is only used by the result page. Regular
- * 					pages don't need to pass this parameter.
- */
-function init(results)
-{
-	displayResults = results;
-	
-	buildTests();
-	prepareRunner();
-	
-	// Not using PhoneGap now, start immediately.
-	run();
-	
-	// Use this code if using PhoneGap.
-	/*if (isPhoneGapReady())
-	{
-		run();
-	}
-	else
-	{
-		// Wait for PhoneGap to load.
-		document.addEventListener("deviceready", onDeviceReady, false);
-		
-		// If the deviceready event isn't fired after a certain time, force init.
-		setTimeout("eventFallback()", 500);
-	}*/
-}
-
-function isPhoneGapReady()
-{
-	// Sometimes the deviceready event is fired too fast, before the script adds the event
-	// listener. By checking existence of window.device we know if it's already fired.
-	return typeof window.device !== "undefined";
-}
-
-function onDeviceReady()
-{
-	console.log("Event: deviceready");
-	if (!deviceReadyFired)
-	{
-		deviceReadyFired = true;
-		run();
-	}
-}
-
-function eventFallback()
-{
-	if (!deviceReadyFired)
-	{
-		console.log("Timed out while waiting for deviceready event. Resuming...");
-		
-		// Mark as fired to prevent double call to run method if event is delayed.
-		deviceReadyFired = true;
-		
-		run();
-	}
-}
-
-function run()
-{
-    // Display results if testing is done.
-	if (displayResults)
-	{
-		testRunner.buildResults();
-	}
-	else
-	{
-		// Use run to always start testing when the page is loaded.
-		// Use runIfActive to only start if a test session is already running.
-		
-		testRunner.run();			    // Automatic.
-		//testRunner.runIfActive();	    // Manual start (with start button).
-	}
-}
-
-function prepareRunner()
-{
-	testRunner = new TestRunner(testSuite, "test_results.html");
-	console.log("TestRunner ready on page " + window.location.href);
 }
