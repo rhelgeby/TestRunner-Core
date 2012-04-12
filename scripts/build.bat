@@ -21,4 +21,4 @@ copy %SRC%\testrunner.css %DEST%
 copy %SRC%\index.html %DEST%
 
 echo Test runner files written to %DEST_FILE%
-
+pause
