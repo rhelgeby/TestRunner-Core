@@ -20,10 +20,11 @@ Note: All test code must be loaded in all pages where tests are executed. If
 
 Example:
 
-    <script type="text/javascript" charset="utf-8" src="test_iterator.js"></script>
-    <script type="text/javascript" charset="utf-8" src="assert.js"></script>
-    <script type="text/javascript" charset="utf-8" src="test_runner.js"></script>
+    <script type="text/javascript" charset="utf-8" src="test_runner-1.0.0.js"></script>
     <script type="text/javascript" charset="utf-8" src="test_main.js"></script>
+
+Use the build script in the build folder to prepare a template. Note that the
+script must be executed from the build folder because it's using relative paths.
 
 
 Creating Tests
