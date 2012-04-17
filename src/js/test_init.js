@@ -61,8 +61,13 @@ function TestRunnerStarter(testSuite, alwaysStart, showResults, eventFallbackDel
 			
 			// If the deviceready event isn't fired after a certain time, force
 			// init.
-			setTimeout("eventFallback()", this.eventFallbackDelay);
-		}	
+			var _starter = this;
+			var fallback = function()
+			{
+				_starter.eventFallback();
+			}
+			setTimeout(fallback, this.eventFallbackDelay);
+		}
 	}
 }
 
