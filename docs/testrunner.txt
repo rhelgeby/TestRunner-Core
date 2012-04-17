@@ -258,3 +258,8 @@ The main object. Manages state and execute tests.
 
 The only "public" methods are run, runIfActive and buildResults. All others are
 considered private and should not be called directly.
+
+
+TEST RUNNER STARTER
+Helper object to initialize a test runner and hide complexity. The constructor
+will, by default, automatically start testing.
