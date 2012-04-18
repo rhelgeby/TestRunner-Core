@@ -600,7 +600,7 @@ TestRunner.prototype.runTest = function(testCase)
 			var _testRunner = this;
 			var handler = function()
 			{
-				console.log("No callbacks called. Resuming testing.");
+				console.log("Timed out while waiting for callbacks. Resuming testing.");
 				
 				// Fail test.
 				_testRunner.failTest(testCase, "No callbacks called.");
