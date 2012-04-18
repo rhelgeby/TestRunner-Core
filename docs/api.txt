@@ -19,6 +19,9 @@ TestRunner(testSuite, resultPage, callbackTimeout)
 TestResult(name, collection, suite, passed, msg)
     Stores the result for a single test case.
 
+TestRunnerStarter(testSuite, alwaysStart, showResults, eventFallbackDelay, callbackTimeout)
+    Initializes and starts a TestRunner.
+
 
 TestCase
 --------
@@ -29,7 +32,7 @@ the new page. If the test doesn't change page, only one phase is required.
 
 The test is considered passed if no exceptions are thrown.
 
-If a test need to load a new page or use callbacks, the test runner can be
+If a test needs to load a new page or use callbacks, the test runner can be
 aborted by returning false in any test phase. When aborted, the test progress
 will be saved so it can resume testing later, or on the new page.
 
@@ -210,9 +213,19 @@ TestRunnerStarter(testSuite, alwaysStart, showResults, eventFallbackDelay, callb
                         test. Default is 10 seconds (10000). This does not apply
                         to tests that don't use callbacks.
 
-TestRunnerStarter.run()
+TestRunnerStarter.run(alwaysStart)
 
-    Function to call when manually start testing.
+    Starts the test runner. This is called by the constructor by default.
+    
+    Parameters:
+    alwaysStart         Whether testing should always start. Passing false will
+                        only start the test runner if a test session is active.
+                        
+                        If starting manually, this must be set to true.
+
+TestRunnerStarter.runner
+
+    A reference to the TestRunner object. In most cases you won't need this.
 
 
 Assert Functions

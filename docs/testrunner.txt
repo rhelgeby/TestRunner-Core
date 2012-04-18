@@ -23,7 +23,7 @@ Requirements:
     <script type="text/javascript" charset="utf-8" src="test_main.js"></script>
     
     Initialize:
-    <body onload="init()">
+    <body onload="initTesting()">
         ...
 
 Note: The test suite passed to TestRunner must not be changed during testing
@@ -125,8 +125,8 @@ Running Tests
 
 Create a function that will construct a TestRunnerStarter object and pass it the
 test suite along with its other required parameters. See details about the
-TestRunnerStarter constructor in the API documentation. TheTestRunnerStarter can
-be configured to start automatically once it's constructed.
+TestRunnerStarter constructor in the API documentation. The TestRunnerStarter
+object can be configured to start automatically once it's constructed.
 
 Example code is located in test_main.js.
 
@@ -224,6 +224,10 @@ When a test phase function returns, Test Runner will check if any callback
 wrappers were used and start a fail-timer. The timer is used to resume testing
 if no callback was executed. If this timer is triggered, the test will fail. If
 a callback is executed, the timer will be aborted.
+
+Note: A callback can only be called once per callback added. There's no support
+      for code that will use the same callback multiple times yet, such as
+      repeated timers.
 
 
 Test Runner Objects
