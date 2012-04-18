@@ -131,7 +131,7 @@ TestRunnerStarter.prototype.eventFallback = function()
 TestRunnerStarter.prototype.prepareRunner = function()
 {
 	this.runner = new TestRunner(this.testSuite, "test_results.html", this.callbackTimeout);
-	console.log("TestRunner ready on page " + window.location.href);
+	//console.log("TestRunner ready on page " + window.location.href);
 }
 
 /**
