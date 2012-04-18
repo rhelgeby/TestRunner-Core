@@ -2,7 +2,7 @@
 // Richard Helgeby
 
 /**
- * Initializes Test Runner.
+ * Initializes and starts TestRunner.
  * 
  * @param testSuite		Test suite to use (TestSuite object).
  * @param alwaysStart	Whether testing should always start (true), or just if
