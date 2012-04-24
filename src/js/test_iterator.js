@@ -4,7 +4,8 @@
 /**
  * Constructs a iterator state object.
  * 
- * This object holds the index of the next element and is suitable for serialization.
+ * This object holds the index of the next element and is suitable for
+ * serialization.
  * 
  * @param nextElement		Index of next element.
  * 
@@ -34,7 +35,7 @@ function ElementIterator(elements, state)
 }
 
 /**
- * Returns the next element.
+ * Returns the next element and updates the cursor position to the next element.
  * 
  * @returns		Next element or null if no more elements.
  */
@@ -51,7 +52,8 @@ ElementIterator.prototype.next = function()
 }
 
 /**
- * Gets the next element without updating the iterator cursor to the next element.
+ * Gets the next element without updating the iterator cursor to the next
+ * element.
  * 
  * @returns		Next element or null if no more elements.
  */
@@ -66,7 +68,8 @@ ElementIterator.prototype.peek = function()
 }
 
 /**
- * Gets the previous element retrieved, if any. Does not update the iterator cursor.
+ * Gets the previous element retrieved, if any. Does not update the iterator
+ * cursor.
  * 
  * @returns		Last element or null if none previously retrieved.
  */

@@ -118,6 +118,7 @@ TestCollection.prototype.validateTestCase = function(testCase)
 {
 	if (!(testCase instanceof TestCase))
 	{
+		// TODO: Bug: where is "i"?
 		throw "Invalid test case at index " + i + ". Must be a TestCase object.";
 	}
 }

@@ -228,6 +228,12 @@ a callback is executed, the timer will be aborted.
 Note: A callback can only be called once per callback added. There's no support
       for code that will use the same callback multiple times yet, such as
       repeated timers.
+      
+      It's still possible to work around this problem yourself by making a
+      custom wrapper that is passed to the test runner callback wrapper. The
+      custom wrapper would then handle regular callbacks as usual, but only call
+      the test runner callback wrapper after the actual callback is called the
+      expected number of times.
 
 
 Test Runner Objects
