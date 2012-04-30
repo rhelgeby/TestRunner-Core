@@ -558,8 +558,8 @@ TestRunner.prototype.runTest = function(testCase)
 	// Loop through phases, starting from current phase.
 	while (!testCase.failed && typeof testCase.phases[this.currentPhase] === "function")
 	{
-		// Number of callbacks used in this phase. (Note: This var is declared/reset here.)
-		this.numCallbacks = 0;
+		// Whether this phase is waiting for a callback. (Note: This var is declared/reset here.)
+		this.waitingForCallback = false;
 		
 		try
 		{
@@ -594,8 +594,8 @@ TestRunner.prototype.runTest = function(testCase)
 	
 	if (abortScript)
 	{
-		// Check if waiting for callbacks.
-		if (this.numCallbacks > 0)
+		// Check if waiting for a callback.
+		if (this.waitingForCallback)
 		{
 			// Create callback fail-handler that will resume script if callback wasn't called.
 			var _testRunner = this;
@@ -605,6 +605,7 @@ TestRunner.prototype.runTest = function(testCase)
 				
 				// Fail test.
 				_testRunner.failTest(testCase, "No callbacks called.");
+				_testRunner.waitingForCallback = false;
 				
 				// Resume test runner.
 				_testRunner.run();
@@ -679,18 +680,25 @@ TestRunner.prototype.failTest = function(testCase, msg)
  */
 TestRunner.prototype.createCallback = function(callback)
 {
-	this.numCallbacks++;
+	this.waitingForCallback = true;
 	var _testRunner = this;
 	
 	// TODO: support for multiple calls to the same callback.
 	
 	var handler = function()
 	{
-		_testRunner.numCallbacks--;
+	    var test = _testRunner.currentTest;
+	    
+		if (!_testRunner.waitingForCallback)
+		{
+		    console.log("Warning: Unexpected callback in test '" + test.name + "'");
+		    return;
+		};
 		
-		// Stop fail-timer
+		// Stop fail-timer and reset states.
 		clearTimeout(_testRunner.callbackFailTimer);
 		_testRunner.callbackFailTimer = null;
+		_testRunner.waitingForCallback = false;
 		
 		// Call function.
 		try
@@ -700,7 +708,7 @@ TestRunner.prototype.createCallback = function(callback)
 		catch (err)
 		{
 			// Handles assertions and other exceptions.
-			_testRunner.handleError(_testRunner.currentTest, err);
+			_testRunner.handleError(test, err);
 		}
 		
 		// Resume testing (proceed to next phase or test.)
@@ -722,19 +730,27 @@ TestRunner.prototype.createCallback = function(callback)
  */
 TestRunner.prototype.createErrorCallback = function(msg)
 {
-	this.numCallbacks++;
+	this.waitingForCallback = true;
 	var _testRunner = this;
 	var _msg = msg;
 	
 	var handler = function()
 	{
-		_testRunner.numCallbacks--;
+		var test = _testRunner.currentTest;
+	    
+		if (!_testRunner.waitingForCallback)
+		{
+		    console.log("Warning: Unexpected callback (error) in test '" + test.name + "'");
+		    return;
+		};
 		
-		// Stop fail-timer
+		// Stop fail-timer and reset states.
 		clearTimeout(_testRunner.callbackFailTimer);
+		_testRunner.callbackFailTimer = null;
+		_testRunner.waitingForCallback = false;
 		
 		// Fail test.
-		_testRunner.failTest(_testRunner.currentTest, _msg);
+		_testRunner.failTest(test, _msg);
 		
 		// Resume testing (proceed to next phase or test.)
 		_testRunner.run();
@@ -751,15 +767,23 @@ TestRunner.prototype.createErrorCallback = function(msg)
  */
 TestRunner.prototype.createNoOpCallback = function()
 {
-	this.numCallbacks++;
+	this.waitingForCallback = true;
 	var _testRunner = this;
 	
 	var handler = function()
 	{
-		_testRunner.numCallbacks--;
+		var test = _testRunner.currentTest;
+	    
+		if (!_testRunner.waitingForCallback)
+		{
+		    console.log("Warning: Unexpected callback (no-op) in test '" + test.name + "'");
+		    return;
+		};
 		
 		// Stop fail-timer
 		clearTimeout(_testRunner.callbackFailTimer);
+		_testRunner.callbackFailTimer = null;
+		_testRunner.waitingForCallback = false;
 		
 		// Resume testing (proceed to next phase or test.)
 		_testRunner.run();

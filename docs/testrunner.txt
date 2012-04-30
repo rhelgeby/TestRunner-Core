@@ -10,12 +10,12 @@ Requirements:
     * HTML5 compatible browser with JavaScript enabled.
     * HTML5 Web Storage (used to store test progress between pages)
 
-1.  Use the build script in the build folder to prepare a template. Note that
-    the script must be executed from the build folder because it's using
-    relative paths.
+1.  Use the build script in the scripts folder to prepare a template. Note that
+    the script must be executed from the scripts folder because it's using
+    relative paths. Files to install will be available in the build folder.
 
-2.  Include its source in every page in the application (more precisely in every
-    page that tests use). In addition the test case code must be included
+2.  Include its source in every page in the application (more precisely, in
+    every page that tests use). In addition the test case code must be included
     (test_main.js).
 
     Add to header:
@@ -26,9 +26,9 @@ Requirements:
     <body onload="initTesting()">
         ...
 
-Note: The test suite passed to TestRunner must not be changed during testing
-      (even between pages). If tests are removed or the order is changed, the
-      test progress state will be corrupted.
+Note: The test suite passed to TestRunnerStarter must not be changed during
+      testing (even between pages). If tests are removed or the order is
+      changed, the test progress state will be corrupted.
 
 
 Creating Tests
@@ -40,7 +40,7 @@ TestSuite objects.
 
 COLLECTIONS
 Test cases are stored in collections, so at least one test collection must be
-created first:
+created first.
 
     var mainCollection = new TestCollection("Main collection");
     var secondCollection = new TestCollection("Second collection");
@@ -231,8 +231,8 @@ Note: A callback can only be called once per callback added. There's no support
       
       It's still possible to work around this problem yourself by making a
       custom wrapper that is passed to the test runner callback wrapper. The
-      custom wrapper would then handle regular callbacks as usual, but only call
-      the test runner callback wrapper after the actual callback is called the
+      wrapper would then handle regular callbacks as usual, but only call the
+      test runner callback wrapper after the actual callback is called the
       expected number of times.
 
 
@@ -273,3 +273,75 @@ considered private and should not be called directly.
 TEST RUNNER STARTER
 Helper object to initialize a test runner and hide complexity. The constructor
 will, by default, automatically start testing.
+
+
+Asynchronous Back-ends
+======================
+
+There is a lot of features in the PhoneGap API based on callbacks for successful
+and failed operations. To be able to test applications that use the PhoneGap
+API, the back-end logic must also be asynchronous.
+
+An example is when something is added to a database. In the back-end controller
+there is an add method for persisting some information. Database calls in
+PhoneGap are asynchronous, so this add method will return before the add
+operation is completed. To test this code, the test case must know if the
+operation was successful or failed. This is possible to do by designing the
+back-end controller to use callbacks for successful and failed operations,
+either by directly forwarding callbacks from PhoneGap or by implementing their
+own callbacks.
+
+A function in the controller might look like this:
+
+    controller.add(object, onSuccess, onError);
+
+In a test case, these callbacks can be easily handled with wrappers made by
+Test Runner:
+
+    testCollection.addTest(new TestCase("Add object", "index.html",
+	[
+		function(testRunner)
+		{
+			var controller = ... (reference to controller)
+			var object = ... (test object to add)
+			
+			var onSuccess = testRunner.createNoOpCallback();
+            var onError = testRunner.createErrorCallback("Failed to add object");
+            
+            controller.add(object, onSuccess, onError);
+            
+            // Wait for callbacks.
+            return false;
+		}
+	]));
+
+If successful, the no-op callback will be called. This callback doesn't do
+anything so the test will pass. If the error callback is called, the test will
+fail.
+
+Controllers may handle callbacks from PhoneGap internally, but they should also
+trigger additional callbacks for returning results to the application or test
+cases. Without callbacks, the tests will always pass because the controller
+methods always returns without errors, before the operation was completed.
+
+
+GUI and Function Tests
+======================
+
+In web applications, the GUI is accessible through DOM and JavaScript. This can
+be used to set values and trigger events on elements in the web page. The most
+basic example of a function test is clicking on a button, as demonstrated early
+in this document. The button changes content of an element when clicked, and the
+test case triggers a click event and verifies that the content was changed.
+
+The basic steps:
+
+    1.  Get a reference to the GUI element(s) through DOM.
+    2.  Do something with the element(s) through JavaScript and DOM. Set
+        content, click, manipulate, etc. And maybe in a certain sequence.
+    3.  Verify the expected result in the same phase or next phase if the code
+        is asynchronous. Results can be verified by reading content or
+        properties.
+
+Instead of GUI elements it's also possible to apply these steps to controllers
+or modules to perform function tests.
