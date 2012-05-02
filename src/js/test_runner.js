@@ -107,19 +107,25 @@ TestCollection.prototype.validate = function()
 {
 	for (var i in this.tests)
 	{
-		this.validateTestCase(this.tests[i]);
+		this.validateTestCase(this.tests[i], i);
 	}
 }
 
 /**
  * Validates a test case. Throws an exception on error.
  */
-TestCollection.prototype.validateTestCase = function(testCase)
+TestCollection.prototype.validateTestCase = function(testCase, i)
 {
-	if (!(testCase instanceof TestCase))
+    if (!(testCase instanceof TestCase))
 	{
-		// TODO: Bug: where is "i"?
-		throw "Invalid test case at index " + i + ". Must be a TestCase object.";
+	    if (typeof i == "undefined")
+	    {
+	        throw "Invlid test case. Must be TestCase object.";
+	    }
+	    else
+	    {
+		    throw "Invalid test case at index " + i + ". Must be a TestCase object.";
+		}
 	}
 }
 
@@ -691,7 +697,7 @@ TestRunner.prototype.createCallback = function(callback)
 	    
 		if (!_testRunner.waitingForCallback)
 		{
-		    console.log("Warning: Unexpected callback in test '" + test.name + "'");
+		    console.log("Warning: Unexpected callback in test '" + test.name + "'. Ignoring.");
 		    return;
 		};
 		

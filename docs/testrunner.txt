@@ -136,6 +136,119 @@ In most cases, it's best to initialize testing in the onload event of each page:
     ...
 
 
+Log Messages
+------------
+
+For debugging purposes various messages are logged to the console. This is an
+overview of all messages Test Runner may display:
+
+(Info) "Using PhoneGap to change page..."
+
+    Workaround for a bug where the PhoneGap API isn't loaded when loading a new
+    page by changing the value in window.location.href. Instead it will use the
+    PhoneGap API to load a new page.
+    
+    This method is only used in PhoneGap applications.
+
+(Info) "Loading initial page for test case <test name>: <page url>"
+
+    The specified page is being loaded or reloaded to clear old data from
+    earlier tests and to make sure testing is started at the correct page.
+
+(Info) "Testing done."
+
+    No more tests to run.
+
+(Info) "Next test: <test name>"
+
+    Name of the test being executed next.
+
+(Info) "Test session active. Continuing tests..."
+
+    There is an active test session. Testing is resumed based on saved states
+    in sessionStorage.
+
+(Info) "Running test <test name> from phase <phase index>"
+
+    A test phase is executed. Phase index is zero-based.
+
+(Info) "Running phase <phase index>"
+
+    A test phase is executed. This message is logged right before the phase
+    function call. Useful for debugging purposes.
+
+(Info) "Waiting for callback (max delay: <delay> ms)..."
+
+    Test Runner has stopped to wait for callbacks. The test will fail if nothing
+    happens before the specified delay.
+
+(Warning) "Timed out while waiting for callbacks. Resuming testing."
+
+    A callback was expected, but was never called within the time limit. The
+    time limit is specified in testRunner.callbackTimeout (in milliseconds).
+
+(Warning) "Warning: Unexpected callback [error | no-op] in test <test name>.
+Ignoring."
+
+    A callback was called after a test was completed.
+    
+    Usually the testing is resumed after a callback is handled, but this time
+    it's ignored. The test is already done.
+    
+    TODO: This feature might be improved by failing the test even if it ended
+    successfully.
+
+(Error) "Failed to use PhoneGap to change page, using default method. Error:
+<message>"
+
+    Something wrong happened when attempting to change page. The cause of this
+    should be explained in the error message.
+    
+    The PhoneGap API may not be loaded in the new page, and the test may fail
+    if it depends on it.
+
+(Error) "Invalid test phase data. Must be an array of functions."
+
+    Validation error in TestCase constructor. The test phases parameter wasn't
+    an array.
+
+(Error) "Invalid test phase at index <phase index>. Must be a function."
+
+    Validation error in TestCase constructor. Invalid object type found in the
+    test phase array.
+
+(Error) "Invalid test case [at index <index>]. Must be a TestCase object."
+
+    Validation error in TestCollection constructor. Invalid object type found in
+    the test case array.
+
+(Error) "Invalid collection at index <index>. Must be a TestCollection object."
+
+    Validation error in TestSuite constructor. Invalid object type found in the
+    test collection array.
+
+(Error) "Invalid test suite. Must be a TestSuite object."
+
+    Validation error in TestRunner constructor.
+
+(Error) "Invalid test case."
+
+    Validation error when loading inital test case page. A TestCase object was
+    expected, but found something else.
+
+(Error) "Invalid result page. Must be a string (page URL)."
+
+    Validation error of URL to result page. Unexpected type.
+
+(Error) "Invalid callbackTimeout. Must be a number."
+
+    Validation error of callback timeout. Invalid type.
+
+(Error) "Missing JSON implementation."
+
+    The browser doesn't have a JSON implementation.
+
+
 Test Runner - Technical Description
 ===================================
 
@@ -186,10 +299,10 @@ saved in a session variable by using the Web Storage feature of HTML5.
 Every time Test Runner is loaded, the state is restored if a test session is
 still active.
 
-The test code itself is not saved, so it's important that the exact same code
-is loaded when testing is resumed. If some tests are excluded in other pages
-the counter may point to wrong tests (and possibly create a infinite loop), or
-point to a invalid array index.
+The test code itself is not saved, so it's important that the same code is
+loaded when testing is resumed. If some tests are excluded in other pages the
+counter may point to wrong tests (and possibly create a infinite loop), or point
+to an invalid array index.
 
 
 INITIALIZING AND STARTING TEST RUNNER
