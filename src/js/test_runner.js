@@ -385,7 +385,7 @@ TestRunner.prototype.loadPage = function(url)
 		// Bug in Android Phone Gap: deviceready won't fire when using location.href. Using
 		// navigator.app.loadUrl in PhoneGap to load a new page properly.
 		
-		// TODO: Get the path.
+		// TODO: Don't hard code. Get the path from the environment.
 		var path = "file:///android_asset/www/";
 		
 		// Use a timer to let the script finish properly before loading a new page.

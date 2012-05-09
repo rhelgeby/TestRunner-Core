@@ -458,3 +458,51 @@ The basic steps:
 
 Instead of GUI elements it's also possible to apply these steps to controllers
 or modules to perform function tests.
+
+
+Future Improvements
+===================
+
+This section describes a few improvements that could be done in later versions.
+
+Known Bugs:
+
+* Fix TestRunner.prototype.loadPage not building correct path on devices
+  other than Android. It's currently hard coded to point to the assets folder.
+
+Improvements:
+
+* Print call stack (with line numbers) in console when a test case throws an
+  error. If the error is an assertion error, don't print anything.
+
+* Give proper access to the callback fail timer delay setting (get/set methods)
+  from phases. Make sure this delay is reset before every phase/test. Eventually
+  add this as an optional test case parameter.
+
+* Attribute in Test Runner to decide what to do when a callback fails with an
+  error or is never called. Ignore and continue? Call a callback error handler
+  routine made by the user?
+
+* Support callbacks that are expected to be called several times. Test Runner
+  would some how need to know when to stop waiting for more callbacks. Possibly
+  by telling it how many times it's expected to be called, or by notifying Test
+  Runner from within the callback.
+
+* More individual settings per test case: callback fail timer delay,
+  before/after functions, what to do when a callback fails (fail test or
+  continue), etc.
+
+* Control panel page with options to run certain tests or collections.
+  Switching between test suites is also something that could be done.
+
+* Move code that builds the result page into a independent object so that Test
+  Runner doesn't need to be initialized on that page. All required data is
+  available in sessionStorage, statistics can be recalculated when looping
+  through results.
+
+* Refactor large methods in Test Runner. Parts of this code could be moved to
+  its own methods.
+
+* Refactor assert functions so that the message is the first parameter. This
+  might be complicated in JavaScript because of optional parameters. The message
+  is optional and optional parameters should come after required parameters.
