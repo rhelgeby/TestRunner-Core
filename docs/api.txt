@@ -134,7 +134,7 @@ TestRunner.run()
 
 TestRunner.runIfActive()
 
-    Resumes an active test session, if it exist. Otherwies it does nothing.
+    Resumes an active test session, if it exist. Otherwise it does nothing.
 
 TestRunner.loadPage(url)
 
@@ -148,10 +148,12 @@ TestRunner.createCallback(callback)
 
     Creates a callback handler for the specified callback.
     
-    Note: Don't call the wrapper function within a test case, instead call the
-          original callback directly. Calling it through the wrapper will result
-          in a infinite loop. This wrapper is only supposed to be called after
-          test runner is stopped.
+    Note: If you need to call the callback manually, don't call the wrapper
+          function within a test case, instead call the original callback
+          directly.
+          
+          Calling it through the wrapper will result in a infinite loop. This
+          wrapper is only supposed to be called after test runner is stopped.
     
     Parameters:
     callback        Original callback. (Usually declared inline.)
@@ -202,7 +204,7 @@ TestRunnerStarter(testSuite, alwaysStart, showResults, eventFallbackDelay, callb
     Parameters:
     testSuite           Test suite to use (TestSuite object).
     alwaysStart         Whether testing should always start (true), or just if
-                        a test session is active (false). If not always starting
+                        a test session is active (false). If not always starting,
                         a call to TestRunnerStarter.run must be done manually.
     showResults         Whether results should be displayed (boolean). This
                         parameter should only be true when used by the result

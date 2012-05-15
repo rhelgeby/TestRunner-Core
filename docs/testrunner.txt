@@ -26,9 +26,9 @@ Requirements:
     <body onload="initTesting()">
         ...
 
-Note: The test suite passed to TestRunnerStarter must not be changed during
-      testing (even between pages). If tests are removed or the order is
-      changed, the test progress state will be corrupted.
+Note: The test suite passed to TestRunnerStarter must not be changed during a
+      test session. If tests are removed or the order is changed, the test
+      progress will be corrupted.
 
 
 Creating Tests
@@ -53,7 +53,7 @@ A test case is divided into phases. Each phase is a function, and if a test
 need to change the page, a second phase (function) is required to resume
 testing on the new page. Most test cases only need one phase.
 
-Since a test case is usually only added to one collection, it's easy to add it
+Since a test case is usually added to only one collection, it's easy to add it
 inline. Note that the last parameter of the TestCase constructor is an array:
 
     mainCollection.addTest(new TestCase("demo", "index.html",
@@ -99,8 +99,8 @@ With two phases:
 
 TEST SUITE
 The test runner expects a test suite of collections with test cases. There may
-be created several test suites with various combinations of collections, but
-only one test suite can be used.
+be created several test suites with various combinations of collections, but the
+test runner only accepts one test suite a time.
 
     var testSuite = new TestSuite("All tests", [mainCollection, secondCollection]);
 
@@ -153,7 +153,7 @@ overview of all messages Test Runner may display:
 (Info) "Loading initial page for test case <test name>: <page url>"
 
     The specified page is being loaded or reloaded to clear old data from
-    earlier tests and to make sure testing is started at the correct page.
+    earlier tests and to make sure testing is started on the correct page.
 
 (Info) "Testing done."
 
@@ -170,11 +170,11 @@ overview of all messages Test Runner may display:
 
 (Info) "Running test <test name> from phase <phase index>"
 
-    A test phase is executed. Phase index is zero-based.
+    A test phase is about to be executed. Phase index is zero-based.
 
 (Info) "Running phase <phase index>"
 
-    A test phase is executed. This message is logged right before the phase
+    A test phase is being executed. This message is logged right before the phase
     function call. Useful for debugging purposes.
 
 (Info) "Waiting for callback (max delay: <delay> ms)..."
@@ -294,7 +294,7 @@ saved in session storage so it can be resumed on a new page or at a later time.
 SAVING STATE
 To keep each test isolated, the page is reloaded between tests. Before loading a
 new page the test progress must be saved. It's serialized in JSON format and
-saved in a session variable by using the Web Storage feature of HTML5.
+saved in a session variable by using the Web Storage feature in HTML5.
 
 Every time Test Runner is loaded, the state is restored if a test session is
 still active.
@@ -336,7 +336,8 @@ Tests that need to use callbacks must do two things:
 When a test phase function returns, Test Runner will check if any callback
 wrappers were used and start a fail-timer. The timer is used to resume testing
 if no callback was executed. If this timer is triggered, the test will fail. If
-a callback is executed, the timer will be aborted.
+a callback is executed, the timer will be aborted. Instead the callback wrapper
+will resume testing.
 
 Note: A callback can only be called once per callback added. There's no support
       for code that will use the same callback multiple times yet, such as
@@ -379,13 +380,10 @@ and after each test.
 TEST RUNNER
 The main object. Manages state and execute tests.
 
-The only "public" methods are run, runIfActive and buildResults. All others are
-considered private and should not be called directly.
-
 
 TEST RUNNER STARTER
 Helper object to initialize a test runner and hide complexity. The constructor
-will, by default, automatically start testing.
+will automatically start testing by default.
 
 
 Asynchronous Back-ends
@@ -506,3 +504,5 @@ Improvements:
 * Refactor assert functions so that the message is the first parameter. This
   might be complicated in JavaScript because of optional parameters. The message
   is optional and optional parameters should come after required parameters.
+
+* Utility method to create a delay in a test with a timer.
